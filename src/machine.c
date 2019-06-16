@@ -20,6 +20,22 @@ int text_size() {
     return size;
 }
 
+byte_t *get_text() {
+    byte_t *text[text_size()];
+    int text_counter = 0;
+    int text_start = pool_size() + 8;
+    for (int i = text_start; i < text_size(); ++i) {
+        text[text_counter] = byte_array[i];
+        text_counter++;
+    }
+    return text;
+}
+
+int get_current_instruction () {
+    int instruction_start = pool_size() + 16;
+    return instruction_start + get_program_counter();
+}
+
 static word_t swap_word_t(word_t num) {
     return ((num>>24)&0xff) | ((num<<8)&0xff0000) |
            ((num>>8)&0xff00) |
@@ -45,12 +61,8 @@ int init_ijvm(char *binary_file) {
     //load the bytes into a byte array
     while (fread(&byte_buffer, sizeof(byte_t), 1, fptr) == 1) {
         byte_array[counter] = byte_buffer;
-        /*printf("Value at byte array index %d: %X \n", counter, byte_array[counter]);*/
         counter++;
     }
-
-    /*printf("Pool size: %d \n", pool_size());
-    printf("Text size: %d \n", text_size());*/
 
     fclose(fptr);
 
@@ -62,9 +74,7 @@ void destroy_ijvm() {
 }
 
 bool step() {
-    int instruction_start = pool_size() + 16;
-
-    switch (byte_array[instruction_start + get_program_counter()]) {
+    switch (byte_array[get_current_instruction()]) {
         case OP_BIPUSH:
             printf("BIPUSH\n");
             program_counter++;
@@ -75,6 +85,22 @@ bool step() {
             break;
         case OP_OUT:
             printf("OUT\n");
+            program_counter++;
+            break;
+        case OP_NOP:
+            printf("NOP\n");
+            program_counter++;
+            break;
+        case OP_LDC_W:
+            printf("LDC_W\n");
+            program_counter++;
+            break;
+        case OP_DUP:
+            printf("DUP\n");
+            program_counter++;
+            break;
+        case OP_HALT:
+            printf("HALT\n");
             program_counter++;
             break;
         default:
