@@ -23,13 +23,13 @@ int text_size() {
 byte_t *get_text() {
     byte_t text[text_size()];
     int text_counter = 0;
-    int text_start = pool_size() + 8;
+    int text_start = pool_size() + 16;
     for (int i = text_start; i < text_size(); ++i) {
         text[text_counter] = byte_array[i];
         printf("Text array at %d: %X", i, text[text_counter]);
         text_counter++;
     }
-    return text;
+    return &byte_array[text_start];
 }
 
 int get_current_instruction () {
