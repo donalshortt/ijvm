@@ -1,93 +1,77 @@
 #include <ijvm.h>
 #include <stdlib.h>
 
-typedef struct {
-    word_t c_origin;
-    word_t c_size;
-    word_t *c_data;
+int program_counter = 0;
 
-    word_t t_origin;
-    word_t t_size;
-    byte_t *t_data;
+struct block {
+    byte_t * block_instructions;
+    int block_size;
+};
 
-    int pc;
-} block_t;
+struct ijvm_instance {
+    struct block constants;
+    struct block text;
+};
 
-block_t *ijvm;
+struct ijvm_instance instance;
 
 static word_t swap_word(word_t num) {
     return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
 }
 
-int init_ijvm(char *binary_file) {
-    // Implement loading of binary here
+struct block read_block(FILE * fptr) {
+    struct block temp;
+    for (int i = 0; i < 2; ++i) { //to throw away the block origin
+        fread(&temp.block_size, 4, 1, fptr);
+    }
+    temp.block_size = swap_word(temp.block_size);
+    temp.block_instructions = malloc(sizeof(byte_t) * temp.block_size);
+    for(int i = 0; i < temp.block_size; i++) {
+        fread(&temp.block_instructions[i], 1, 1, fptr);
+    }
+    return temp;
+}
 
-    FILE *fp;
-    fp = fopen(binary_file, "rb");
-    if(fp == NULL) {
-        printf("could not open file\n");
+int init_ijvm(char *binary_file) {
+
+    //initialise the instance
+    instance = (struct ijvm_instance) {.constants = {.block_instructions = NULL, .block_size = 0},
+                                       .text = {.block_instructions = NULL, .block_size = 0}};
+
+    //check if the file is valid
+    FILE *fptr;
+    fptr = fopen(binary_file, "rb");
+    if(fptr == NULL) {
+        printf("Could not open file :(\n");
         return -1;
     }
 
     word_t buffer;
-    fread(&buffer, sizeof(word_t), 1, fp); //reading the header to check
+    fread(&buffer, sizeof(word_t), 1, fptr);
 
     buffer = swap_word(buffer);
 
     if(buffer != MAGIC_NUMBER) {
-        printf("invalid file\n");
+        printf("Invalid file!\n");
         return -1;
     }
 
-    ijvm = malloc(sizeof(block_t));
+    //load the data into the struct
+    instance.constants = read_block(fptr);
+    instance.text = read_block(fptr);
 
-    //constant pool
-    fread(&buffer, sizeof(word_t), 1, fp); //reading const. pool origin
-    ijvm->c_origin = swap_word(buffer);
-
-    fread(&buffer, sizeof(word_t), 1, fp); //reading const. pool size
-    ijvm->c_size = swap_word(buffer);
-
-    ijvm->c_data = malloc((ijvm->c_size/4)*sizeof(word_t));
-    fread(ijvm->c_data, sizeof(word_t), ijvm->c_size/4, fp); //reading const. pool data
-
-    //text
-    fread(&buffer, sizeof(word_t), 1, fp); //reading text origin
-    ijvm->t_origin = swap_word(buffer);
-
-    fread(&buffer, sizeof(word_t), 1, fp); //reading text size
-    ijvm->t_size = swap_word(buffer);
-
-    ijvm->t_data = malloc(ijvm->t_size*sizeof(byte_t));
-    fread(ijvm->t_data, sizeof(byte_t), ijvm->t_size, fp); //reading text data
-
-    ijvm->pc = 0;
-
-    fclose(fp);
-
+    fclose(fptr);
     return 0;
 }
 
 void destroy_ijvm() {
     // Reset IJVM state
-    free(ijvm->c_data);
-    free(ijvm->t_data);
-    free(ijvm);
 }
 
 void run() {
-    // Step while you can
-
-    while(!finished()) {
-        //if(!step())
-        //{
-        //printf("");
-        //}
-
-        //printf("\n");
-        //ijvm->pc++;
+    while(program_counter < instance.text.block_size) {
+        step();
     }
-
 }
 
 void set_input(FILE *fp) {
@@ -98,125 +82,35 @@ void set_output(FILE *fp) {
     // TODO: implement me
 }
 
-byte_t *get_text() {
-    return ijvm->t_data;
-}
-
-int text_size() {
-    return ijvm->t_size;
-}
-
-int get_program_counter() {
-    return ijvm->pc;
-}
-
-word_t get_local_variable(int i) {
+bool step() {
+    switch (instance.text.block_instructions[program_counter]) {
+        case OP_BIPUSH:
+            printf("BIPUSH\n");
+            program_counter++;
+            break;
+        case OP_IADD:
+            printf("IADD\n");
+            program_counter++;
+            break;
+        case OP_OUT:
+            printf("OUT\n");
+            program_counter++;
+            break;
+        default:
+            program_counter++;
+            break;
+    }
     return 0;
 }
 
-word_t get_constant(int i) {
-    return swap_word(*(ijvm->c_data+i));
+int text_size() {
+    return instance.text.block_size;
 }
 
-bool step() {
-    /*printf("%d. ", get_program_counter());*/
-    switch(get_instruction()){
-        case OP_BIPUSH:
-            printf("OP_BIPUSH");
-            break;
-        case OP_DUP:
-            printf("OP_DUP");
-            break;
-        case OP_ERR:
-            printf("OP_ERR");
-            break;
-        case OP_GOTO:
-            printf("OP_GOTO");
-            break;
-        case OP_HALT:
-            printf("OP_HALT");
-            break;
-        case OP_IADD:
-            printf("OP_IADD");
-            break;
-        case OP_IAND:
-            printf("OP_IAND");
-            break;
-        case OP_IFEQ:
-            printf("OP_IFEQ");
-            break;
-        case OP_IFLT:
-            printf("OP_IFLT");
-            break;
-        case OP_ICMPEQ:
-            printf("OP_ICMPEQ");
-            break;
-        case OP_IINC:
-            printf("OP_IINC");
-            break;
-        case OP_ILOAD:
-            printf("OP_ILOAD");
-            break;
-        case OP_IN:
-            printf("OP_IN");
-            break;
-        case OP_INVOKEVIRTUAL:
-            printf("OP_INVOKEVIRTUAL");
-            break;
-        case OP_IOR:
-            printf("OP_IOR");
-            break;
-        case OP_IRETURN:
-            printf("OP_IRETURN");
-            break;
-        case OP_ISTORE:
-            printf("OP_ISTORE");
-            break;
-        case OP_ISUB:
-            printf("OP_ISUB");
-            break;
-        case OP_LDC_W:
-            printf("OP_LDC_W");
-            break;
-        case OP_NOP:
-            printf("OP_NOP");
-            break;
-        case OP_OUT:
-            printf("OP_OUT");
-            break;
-        case OP_POP:
-            printf("OP_POP");
-            break;
-        case OP_SWAP:
-            printf("OP_SWAP");
-            break;
-        case OP_WIDE:
-            printf("OP_WIDE");
-            break;
-        default:
-            printf("%.2X", get_instruction());
-    }
-    ijvm->pc++;
-    printf("\n");
-    return true;
+byte_t *get_text() {
+    return instance.text.block_instructions;
 }
 
-bool finished() {
-    if(ijvm->pc+1==ijvm->t_size) {
-        return true;
-    }
-
-    if(get_instruction()==OP_HALT || get_instruction()==OP_ERR) {
-        return true;
-    }
-
-    if(step() == false) {
-        return true;
-    }
-
-    return false;
-}
-
-byte_t get_instruction() {
-    return *(ijvm->t_data+ijvm->pc); //currently pointed to instruction at pc;
+int get_program_counter() {
+    return program_counter;
 }
