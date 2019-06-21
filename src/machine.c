@@ -4,7 +4,7 @@
 int program_counter = 0;
 
 struct block {
-    byte_t * block_instructions;
+    byte_t* block_instructions;
     int block_size;
 };
 
@@ -19,7 +19,7 @@ static word_t swap_word(word_t num) {
     return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
 }
 
-struct block read_block(FILE * fptr) {
+struct block read_block(FILE* fptr) {
     struct block temp;
     for (int i = 0; i < 2; ++i) { //to throw away the block origin
         fread(&temp.block_size, 4, 1, fptr);
@@ -39,7 +39,7 @@ int init_ijvm(char *binary_file) {
                                        .text = {.block_instructions = NULL, .block_size = 0}};
 
     //check if the file is valid
-    FILE *fptr;
+    FILE* fptr;
     fptr = fopen(binary_file, "rb");
     if(fptr == NULL) {
         printf("Could not open file :(\n");
@@ -65,7 +65,9 @@ int init_ijvm(char *binary_file) {
 }
 
 void destroy_ijvm() {
-    // Reset IJVM state
+    program_counter = 0;
+    instance = (struct ijvm_instance) {.constants = {.block_instructions = NULL, .block_size = 0},
+            .text = {.block_instructions = NULL, .block_size = 0}};
 }
 
 void run() {
@@ -107,7 +109,7 @@ int text_size() {
     return instance.text.block_size;
 }
 
-byte_t *get_text() {
+byte_t* get_text() {
     return instance.text.block_instructions;
 }
 
