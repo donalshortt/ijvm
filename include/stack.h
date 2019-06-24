@@ -1,6 +1,7 @@
 #ifndef STACK_H
 #define STACK_H
 
-void bigGay();
+//Add a node to the stack
+struct stack_node* new_node();
 
 #endif
