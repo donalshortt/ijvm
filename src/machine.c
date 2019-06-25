@@ -14,6 +14,8 @@ struct block {
 struct ijvm_instance {
     struct block constants;
     struct block text;
+    FILE* file_input;
+    FILE* file_output;
 };
 
 struct ijvm_instance instance;
@@ -84,21 +86,12 @@ void run() {
 }
 
 void set_input(FILE *fp) {
-    // TODO: implement me
+    instance.file_input = fp;
 }
 
 void set_output(FILE *fp) {
-    // TODO: implement me
+    instance.file_output = fp;
 }
-
-//TEMPORARY
-
-//END TEMPORARY
-
-//TEMPORARY 2
-
-
-//END TEMPORARY 2
 
 bool step() {
     switch (instance.text.block_instructions[program_counter]) {
@@ -110,15 +103,16 @@ bool step() {
             iadd();
             program_counter++;
             break;
-        case OP_OUT:
-            program_counter++;
-            break;
         case OP_ISUB:
             isub();
             program_counter++;
             break;
         case OP_IAND:
             iand();
+            program_counter++;
+            break;
+        case OP_DUP:
+            dup();
             program_counter++;
             break;
         case OP_IOR:
@@ -133,7 +127,32 @@ bool step() {
             pop(&root);
             program_counter++;
             break;
+        case OP_OUT:
+            out(instance.file_output);
+            program_counter++;
+            break;
+        case OP_IN:
+            in(instance.file_input);
+            program_counter++;
+            break;
+        case OP_GOTO:
+            go_to(&instance.text.block_instructions[program_counter + 1], &program_counter);
+            program_counter++;
+            break;
+        case OP_IFEQ:
+            ifeq(&instance.text.block_instructions[program_counter + 1], &program_counter);
+            program_counter++;
+            break;
+        case OP_IFLT:
+            iflt(&instance.text.block_instructions[program_counter + 1], &program_counter);
+            program_counter++;
+            break;
+        case OP_ICMPEQ:
+            icmpeq(&instance.text.block_instructions[program_counter + 1], &program_counter);
+            program_counter++;
+            break;
         default:
+            printf("<!>Instruction unknown<!>\n");
             program_counter++;
             break;
     }
