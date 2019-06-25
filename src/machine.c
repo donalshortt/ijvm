@@ -1,5 +1,8 @@
-#include <ijvm.h>
 #include <stdlib.h>
+#include <string.h>
+#include "ijvm.h"
+#include "stack.h"
+#include "instructions.h"
 
 int program_counter = 0;
 
@@ -14,6 +17,8 @@ struct ijvm_instance {
 };
 
 struct ijvm_instance instance;
+
+struct StackNode *root;
 
 static word_t swap_word(word_t num) {
     return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
@@ -35,8 +40,10 @@ struct block read_block(FILE* fptr) {
 int init_ijvm(char *binary_file) {
 
     //initialise the instance
-    instance = (struct ijvm_instance) {.constants = {.block_instructions = NULL, .block_size = 0},
-                                       .text = {.block_instructions = NULL, .block_size = 0}};
+    instance = (struct ijvm_instance) {
+        .constants = {.block_instructions = NULL, .block_size = 0},
+        .text = {.block_instructions = NULL, .block_size = 0}
+    };
 
     //check if the file is valid
     FILE* fptr;
@@ -84,18 +91,46 @@ void set_output(FILE *fp) {
     // TODO: implement me
 }
 
+//TEMPORARY
+
+//END TEMPORARY
+
+//TEMPORARY 2
+
+
+//END TEMPORARY 2
+
 bool step() {
     switch (instance.text.block_instructions[program_counter]) {
         case OP_BIPUSH:
-            printf("BIPUSH\n");
-            program_counter++;
+            bipush(instance.text.block_instructions[program_counter + 1]);
+            program_counter = program_counter + 2;
             break;
         case OP_IADD:
-            printf("IADD\n");
+            iadd();
             program_counter++;
             break;
         case OP_OUT:
-            printf("OUT\n");
+            program_counter++;
+            break;
+        case OP_ISUB:
+            isub();
+            program_counter++;
+            break;
+        case OP_IAND:
+            iand();
+            program_counter++;
+            break;
+        case OP_IOR:
+            ior();
+            program_counter++;
+            break;
+        case OP_SWAP:
+            swap();
+            program_counter++;
+            break;
+        case OP_POP:
+            pop(&root);
             program_counter++;
             break;
         default:

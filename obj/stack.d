@@ -1,1 +1,2 @@
-obj/stack.o: src/stack.c include/stack.h include/ijvm.h
+obj/stack.o: src/stack.c include/ijvm.h include/stack.h include/ijvm.h \
+ include/instructions.h
