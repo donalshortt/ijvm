@@ -1,15 +1,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ijvm.h"
-#include "stack.h"
 #include "instructions.h"
-#include "frame.h"
 
 int program_counter = 0;
 
 struct block {
     byte_t* block_instructions;
-    int block_size;
+    size_t block_size;
 };
 
 struct ijvm_instance {
@@ -23,16 +21,6 @@ struct ijvm_instance {
 struct ijvm_instance instance;
 
 struct StackNode* root;
-
-struct frame {
-    struct frame* prev;
-    word_t* local_vars;
-};
-
-current_frame = (struct frame) {
-        .prev = NULL,
-        .local_vars = (word_t)malloc(sizeof(word_t)*1024)
-};
 
 static word_t swap_word(word_t num) {
     word_t beans = ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
@@ -71,6 +59,18 @@ int init_ijvm(char *binary_file) {
         .constants = {.block_instructions = NULL, .block_size = 0},
         .text = {.block_instructions = NULL, .block_size = 0}
     };
+    printf("-->Size of big frame before: %ld\n", sizeof(big_frame));
+
+    big_frame = (struct frame*)malloc(sizeof(struct frame));
+    big_frame->local_vars = (word_t*)malloc(sizeof(word_t)*1024);
+    for (int i = 0; i < 1024; ++i) {
+        big_frame->local_vars[i] = 6;
+    }
+
+    instance.file_input = stdin;
+    instance.file_output = stdout;
+
+    printf("-->Size of big frame after: %ld\n", sizeof(big_frame));
 
     //check if the file is valid
     FILE* fptr;
@@ -103,13 +103,12 @@ void destroy_ijvm() {
     program_counter = 0;
     instance = (struct ijvm_instance) {.constants = {.block_instructions = NULL, .block_size = 0},
             .text = {.block_instructions = NULL, .block_size = 0}};
+    free(big_frame);
 }
 
 void run() {
-    while (program_counter < instance.text.block_size) {
-        printf("PROGRAM COUNTER IS: %d\n", program_counter);
-        step();
-    }
+    while(step()) {}
+    return;
 }
 
 void set_input(FILE *fp) {
@@ -121,6 +120,7 @@ void set_output(FILE *fp) {
 }
 
 bool step() {
+    printf("instruction: %x\n", get_instruction());
     switch (instance.text.block_instructions[program_counter]) {
         case OP_NOP:
             program_counter++;
@@ -186,7 +186,20 @@ bool step() {
             program_counter = program_counter + 3;
             break;
         case OP_ISTORE:
-            istore(program_counter + 1);
+            istore(instance.text.block_instructions[program_counter + 1]);
+            program_counter++;
+            program_counter++;
+            break;
+        case OP_ILOAD:
+            iload(instance.text.block_instructions[program_counter + 1]);
+            program_counter++;
+            program_counter++;
+            break;
+        case OP_IINC:
+            iinc(instance.text.block_instructions[program_counter + 1], instance.text.block_instructions[program_counter + 2]);
+            program_counter++;
+            program_counter++;
+            program_counter++;
         case OP_HALT:
             return 0;
         default:
@@ -194,7 +207,7 @@ bool step() {
             program_counter++;
             break;
     }
-    return 0;
+    return true;
 }
 
 int text_size() {
@@ -210,5 +223,9 @@ int get_program_counter() {
 }
 
 word_t get_local_variable(int i) {
-    return current_frame->local_vars[i];
+    return (signed char)big_frame->local_vars[i];
+}
+
+byte_t get_instruction() {
+    return instance.text.block_instructions[program_counter];
 }

@@ -5,7 +5,8 @@
 #ifndef INSTRUCTIONS_H
 #define INSTRUCTIONS_H
 
-#include "ijvm.h"
+#include "frame.h"
+#include "stack.h"
 
 void bipush(word_t arg);
 
@@ -36,6 +37,10 @@ void icmpeq(byte_t* array, int* program_counter);
 void ldc_w(byte_t* array, word_t* constant_pool_array);
 
 void istore(int index);
+
+void iload(int index);
+
+void iinc(byte_t index, byte_t value);
 
 unsigned short arr_to_short(byte_t* arg);
 

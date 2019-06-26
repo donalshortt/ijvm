@@ -22,6 +22,4 @@ word_t pop(struct StackNode** root);
 
 word_t peek(struct StackNode* root);
 
-word_t tos();
-
 #endif

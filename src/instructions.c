@@ -10,8 +10,6 @@
 
 struct StackNode *root;
 
-struct frame* current_frame;
-
 void bipush(word_t arg) { //QUESTION: Should I use byte_t or word_t?
     push(&root, (char)arg);
     return;
@@ -61,19 +59,15 @@ void swap() {
 
 void out(FILE* output) {
     word_t temp = pop(&root);
-    if (output == NULL) {
-        printf("Could not write character %c to file!\n", temp);
-    } else {
-        fprintf(output,"%c", temp);
-    }
+    fprintf(output, "%c", temp);
 }
 
 void in(FILE* input) {
-    int lettuce;
+    word_t lettuce;
     lettuce = fgetc(input);
     if (lettuce == EOF) {
         lettuce = 0;
-    } else if (lettuce == 255) {
+    } else if (lettuce >= 255) {
         lettuce = 0;
     }
     push(&root, lettuce);
@@ -118,7 +112,20 @@ void ldc_w(byte_t* array, word_t* constant_pool_array) {
 }
 
 void istore(int index) {
-    current_frame->local_vars[index] = pop(&root);
+    word_t beans = pop(&root);
+    printf("BEANS IS: %d\n", beans);
+    big_frame->local_vars[index] = beans;
+    printf("LARGE EGGS\n");
+}
+
+void iload(int index) {
+    word_t temp = big_frame->local_vars[index];
+    printf("___Value in ILOAD: %x\n", temp);
+    push(&root, temp);
+}
+
+void iinc(byte_t index, byte_t value) {
+    big_frame->local_vars[index] += value;
 }
 
 unsigned short arr_to_short(byte_t* bytes) {

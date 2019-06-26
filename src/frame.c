@@ -7,5 +7,9 @@
 #include "instructions.h"
 #include "frame.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-struct frame* current_frame;
+
+void big_test() {
+    printf("I AM VERY SICK OF THIS ASSIGN<ENT\n");
+}
