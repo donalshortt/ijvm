@@ -113,14 +113,11 @@ void ldc_w(byte_t* array, word_t* constant_pool_array) {
 
 void istore(int index) {
     word_t beans = pop(&root);
-    printf("BEANS IS: %d\n", beans);
     big_frame->local_vars[index] = beans;
-    printf("LARGE EGGS\n");
 }
 
 void iload(int index) {
     word_t temp = big_frame->local_vars[index];
-    printf("___Value in ILOAD: %x\n", temp);
     push(&root, temp);
 }
 

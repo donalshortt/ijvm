@@ -19,8 +19,8 @@ typedef int32_t word_t; /* the basic unit of the ijvm will be an int32 */
 #define OP_IFEQ           ((byte_t) 0x99) //check
 #define OP_IFLT           ((byte_t) 0x9B) //check
 #define OP_ICMPEQ         ((byte_t) 0x9F) //check
-#define OP_IINC           ((byte_t) 0x84)
-#define OP_ILOAD          ((byte_t) 0x15)
+#define OP_IINC           ((byte_t) 0x84) //check
+#define OP_ILOAD          ((byte_t) 0x15) //check
 #define OP_IN             ((byte_t) 0xFC) //check
 #define OP_INVOKEVIRTUAL  ((byte_t) 0xB6)
 #define OP_IOR            ((byte_t) 0xB0) //check

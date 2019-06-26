@@ -59,18 +59,13 @@ int init_ijvm(char *binary_file) {
         .constants = {.block_instructions = NULL, .block_size = 0},
         .text = {.block_instructions = NULL, .block_size = 0}
     };
-    printf("-->Size of big frame before: %ld\n", sizeof(big_frame));
 
     big_frame = (struct frame*)malloc(sizeof(struct frame));
     big_frame->local_vars = (word_t*)malloc(sizeof(word_t)*1024);
-    for (int i = 0; i < 1024; ++i) {
-        big_frame->local_vars[i] = 6;
-    }
 
+    //default - overwritten if tests ask for alternative input/output
     instance.file_input = stdin;
     instance.file_output = stdout;
-
-    printf("-->Size of big frame after: %ld\n", sizeof(big_frame));
 
     //check if the file is valid
     FILE* fptr;
@@ -120,7 +115,6 @@ void set_output(FILE *fp) {
 }
 
 bool step() {
-    printf("instruction: %x\n", get_instruction());
     switch (instance.text.block_instructions[program_counter]) {
         case OP_NOP:
             program_counter++;
@@ -187,19 +181,15 @@ bool step() {
             break;
         case OP_ISTORE:
             istore(instance.text.block_instructions[program_counter + 1]);
-            program_counter++;
-            program_counter++;
+            program_counter += 2;
             break;
         case OP_ILOAD:
             iload(instance.text.block_instructions[program_counter + 1]);
-            program_counter++;
-            program_counter++;
+            program_counter += 2;
             break;
         case OP_IINC:
             iinc(instance.text.block_instructions[program_counter + 1], instance.text.block_instructions[program_counter + 2]);
-            program_counter++;
-            program_counter++;
-            program_counter++;
+            program_counter += 3;
         case OP_HALT:
             return 0;
         default:

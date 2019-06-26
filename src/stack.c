@@ -43,6 +43,5 @@ word_t peek(struct StackNode* root) {
 }
 
 word_t tos() {
-    printf("xXx_TopOfStack_xXx: %x\n", peek(root));
     return peek(root);
 }
