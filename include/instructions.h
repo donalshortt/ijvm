@@ -33,6 +33,10 @@ void iflt(byte_t* array, int* program_counter);
 
 void icmpeq(byte_t* array, int* program_counter);
 
+void ldc_w(byte_t* array, word_t* constant_pool_array);
+
+void istore(int index);
+
 unsigned short arr_to_short(byte_t* arg);
 
 #endif //PAD_SKELETON_C_INSTRUCTIONS_H

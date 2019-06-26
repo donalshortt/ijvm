@@ -5,9 +5,12 @@
 #include "stack.h"
 #include "ijvm.h"
 #include "instructions.h"
+#include "frame.h"
 #include <stdio.h>
 
 struct StackNode *root;
+
+struct frame* current_frame;
 
 void bipush(word_t arg) { //QUESTION: Should I use byte_t or word_t?
     push(&root, (char)arg);
@@ -107,6 +110,15 @@ void icmpeq(byte_t* array, int* program_counter) {
     } else {
         *program_counter = *program_counter + 2;
     }
+}
+
+void ldc_w(byte_t* array, word_t* constant_pool_array) {
+    unsigned short index = arr_to_short(array);
+    push(&root, constant_pool_array[index]);
+}
+
+void istore(int index) {
+    current_frame->local_vars[index] = pop(&root);
 }
 
 unsigned short arr_to_short(byte_t* bytes) {

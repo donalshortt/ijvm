@@ -1,6 +1,7 @@
 #include "ijvm.h"
 #include "stack.h"
 #include "instructions.h"
+#include "frame.h"
 #include <stdlib.h>
 
 struct StackNode *root;

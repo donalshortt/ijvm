@@ -3,6 +3,7 @@
 #include "ijvm.h"
 #include "stack.h"
 #include "instructions.h"
+#include "frame.h"
 
 int program_counter = 0;
 
@@ -14,18 +15,31 @@ struct block {
 struct ijvm_instance {
     struct block constants;
     struct block text;
+    word_t* constant_pool;
     FILE* file_input;
     FILE* file_output;
 };
 
 struct ijvm_instance instance;
 
-struct StackNode *root;
+struct StackNode* root;
+
+struct frame {
+    struct frame* prev;
+    word_t* local_vars;
+};
+
+current_frame = (struct frame) {
+        .prev = NULL,
+        .local_vars = (word_t)malloc(sizeof(word_t)*1024)
+};
 
 static word_t swap_word(word_t num) {
-    return ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
+    word_t beans = ((num>>24)&0xff) | ((num<<8)&0xff0000) | ((num>>8)&0xff00) | ((num<<24)&0xff000000);
+    return beans;
 }
 
+//loads the data into the struct block-by-block
 struct block read_block(FILE* fptr) {
     struct block temp;
     for (int i = 0; i < 2; ++i) { //to throw away the block origin
@@ -35,6 +49,17 @@ struct block read_block(FILE* fptr) {
     temp.block_instructions = malloc(sizeof(byte_t) * temp.block_size);
     for(int i = 0; i < temp.block_size; i++) {
         fread(&temp.block_instructions[i], 1, 1, fptr);
+    }
+    return temp;
+}
+
+//converts the constants - currently stored as bytes - into an array of words
+word_t* load_constant_pool(struct block constants) {
+    word_t* temp = (word_t*)malloc(constants.block_size * sizeof(word_t));
+    int index_at = 0;
+    for(int i = 0; i < constants.block_size; i = i + 4) { //could've put this in a separate function but im lazy
+        temp[index_at] = constants.block_instructions[i+3] | (word_t)constants.block_instructions[i+2] << 8 | (word_t)constants.block_instructions[i+1] << 16 | (word_t)constants.block_instructions[i] << 24;
+        index_at++;
     }
     return temp;
 }
@@ -67,6 +92,7 @@ int init_ijvm(char *binary_file) {
 
     //load the data into the struct
     instance.constants = read_block(fptr);
+    instance.constant_pool = load_constant_pool(instance.constants);
     instance.text = read_block(fptr);
 
     fclose(fptr);
@@ -80,7 +106,8 @@ void destroy_ijvm() {
 }
 
 void run() {
-    while(program_counter < instance.text.block_size) {
+    while (program_counter < instance.text.block_size) {
+        printf("PROGRAM COUNTER IS: %d\n", program_counter);
         step();
     }
 }
@@ -95,6 +122,9 @@ void set_output(FILE *fp) {
 
 bool step() {
     switch (instance.text.block_instructions[program_counter]) {
+        case OP_NOP:
+            program_counter++;
+            break;
         case OP_BIPUSH:
             bipush(instance.text.block_instructions[program_counter + 1]);
             program_counter = program_counter + 2;
@@ -151,6 +181,14 @@ bool step() {
             icmpeq(&instance.text.block_instructions[program_counter + 1], &program_counter);
             program_counter++;
             break;
+        case OP_LDC_W:
+            ldc_w(&instance.text.block_instructions[program_counter + 1], instance.constant_pool);
+            program_counter = program_counter + 3;
+            break;
+        case OP_ISTORE:
+            istore(program_counter + 1);
+        case OP_HALT:
+            return 0;
         default:
             printf("<!>Instruction unknown<!>\n");
             program_counter++;
@@ -169,4 +207,8 @@ byte_t* get_text() {
 
 int get_program_counter() {
     return program_counter;
+}
+
+word_t get_local_variable(int i) {
+    return current_frame->local_vars[i];
 }
