@@ -21,7 +21,6 @@ void push(struct StackNode** root, word_t data) {
     struct StackNode* stackNode = newNode(data);
     stackNode->next = *root;
     *root = stackNode;
-    //printf("%x pushed to stack\n", data);
 }
 
 word_t pop(struct StackNode** root) {

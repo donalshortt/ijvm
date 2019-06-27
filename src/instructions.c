@@ -113,20 +113,27 @@ void ldc_w(byte_t* array, word_t* constant_pool_array) {
 
 void istore(int index) {
     word_t beans = pop(&root);
-    big_frame->local_vars[index] = beans;
+    current_frame->local_vars[index] = beans;
 }
 
 void iload(int index) {
-    word_t temp = big_frame->local_vars[index];
+    word_t temp = current_frame->local_vars[index];
     push(&root, temp);
 }
 
 void iinc(byte_t index, byte_t value) {
-    big_frame->local_vars[index] += value;
+    current_frame->local_vars[index] += value;
 }
 
-void invoke_virtual(byte_t* array) {
-
+void invoke_virtual(byte_t* array, int counter_to_store, word_t* constant_pool) {
+    printf("<!>Invoke virtual<!>\n");
+    signed short pointer = arr_to_short(array);
+    int method_start = &constant_pool[pointer];
+    printf("Signed short(pointer): %d\n", pointer);
+//    unsigned short num_of_args = arr_to_short(&array[method_start]); //segfault
+//    unsigned short local_var_size = arr_to_short(&array[method_start + 2]); //segfault
+//    printf("olalalalLocal var size: %d\n", local_var_size);
+//    new_frame(local_var_size, num_of_args,counter_to_store);
 }
 
 unsigned short arr_to_short(byte_t* bytes) {

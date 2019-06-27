@@ -60,8 +60,7 @@ int init_ijvm(char *binary_file) {
         .text = {.block_instructions = NULL, .block_size = 0}
     };
 
-    big_frame = (struct frame*)malloc(sizeof(struct frame));
-    big_frame->local_vars = (word_t*)malloc(sizeof(word_t)*1024);
+    init_first_frame();
 
     //default - overwritten if tests ask for alternative input/output
     instance.file_input = stdin;
@@ -98,7 +97,7 @@ void destroy_ijvm() {
     program_counter = 0;
     instance = (struct ijvm_instance) {.constants = {.block_instructions = NULL, .block_size = 0},
             .text = {.block_instructions = NULL, .block_size = 0}};
-    free(big_frame);
+    free(current_frame);
 }
 
 void run() {
@@ -115,6 +114,8 @@ void set_output(FILE *fp) {
 }
 
 bool step() {
+    printf("-->Program counter is: %d\n", program_counter);
+    //printf("-->Top of stack is: %d\n", tos());
     switch (instance.text.block_instructions[program_counter]) {
         case OP_NOP:
             program_counter++;
@@ -190,8 +191,11 @@ bool step() {
         case OP_IINC:
             iinc(instance.text.block_instructions[program_counter + 1], instance.text.block_instructions[program_counter + 2]);
             program_counter += 3;
+            break;
         case OP_INVOKEVIRTUAL:
-
+            invoke_virtual(&instance.text.block_instructions[program_counter + 1], program_counter, instance.constant_pool);
+            program_counter += 3;
+            break;
         case OP_HALT:
             return 0;
         default:
@@ -215,7 +219,7 @@ int get_program_counter() {
 }
 
 word_t get_local_variable(int i) {
-    return (signed char)big_frame->local_vars[i];
+    return (signed char)current_frame->local_vars[i];
 }
 
 byte_t get_instruction() {

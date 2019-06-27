@@ -8,13 +8,18 @@
 #include "ijvm.h"
 
 struct frame {
-    struct frame *prev;
+    struct frame* prev;
     word_t *local_vars;
+    short num_args;
+    int local_program_counter;
+    int prev_program_counter;
 };
 
-struct frame* big_frame;
+struct frame* current_frame;
 
-//void init_frame(struct frame* frame);
+void init_first_frame();
+
+void new_frame(unsigned short local_var_size, unsigned short num_of_args, int counter_to_store);
 
 void big_test();
 

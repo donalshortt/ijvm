@@ -42,7 +42,7 @@ void iload(int index);
 
 void iinc(byte_t index, byte_t value);
 
-void invoke_virtual(byte_t* array);
+void invoke_virtual(byte_t* array, int counter_to_store, word_t* constant_pool);
 
 unsigned short arr_to_short(byte_t* arg);
 
