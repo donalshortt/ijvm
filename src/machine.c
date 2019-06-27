@@ -190,6 +190,8 @@ bool step() {
         case OP_IINC:
             iinc(instance.text.block_instructions[program_counter + 1], instance.text.block_instructions[program_counter + 2]);
             program_counter += 3;
+        case OP_INVOKEVIRTUAL:
+
         case OP_HALT:
             return 0;
         default:

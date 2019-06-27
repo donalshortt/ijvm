@@ -125,6 +125,10 @@ void iinc(byte_t index, byte_t value) {
     big_frame->local_vars[index] += value;
 }
 
+void invoke_virtual(byte_t* array) {
+
+}
+
 unsigned short arr_to_short(byte_t* bytes) {
     unsigned short arg = bytes[1] | bytes[0] << 8;
     return arg;
