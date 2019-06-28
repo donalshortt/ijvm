@@ -55,13 +55,13 @@ int32_t peek(struct stack_node* root) {
     return root->data;
 }
 
-// int get_stack_size(struct stack_node* root) { //QUESTION: is iterative or recursive way faster?
-//     if (root == NULL) {
-//         return 0;
-//     } else {
-//         return 1 + get_stack_size(root->next_node);
-//     }
-// }
+ int get_stack_size(struct stack_node* root) { //QUESTION: is iterative or recursive way faster?
+     if (root == NULL) {
+         return 0;
+     } else {
+         return 1 + get_stack_size(root->next_node);
+     }
+ }
 
 void traverseList()
 {

@@ -11,16 +11,19 @@ struct frame {
     struct frame* prev;
     word_t *local_vars;
     short num_args;
-    int local_program_counter;
     int prev_program_counter;
+    int prev_stack_size;
 };
 
 struct frame* current_frame;
 
 void init_first_frame();
 
-void new_frame(unsigned short local_var_size, unsigned short num_of_args, int counter_to_store);
+void new_frame(int memory_allocated, int counter_to_store, int stack_size_to_store);
 
-void big_test();
+void frame_store(int index, word_t arg);
+
+void frame_delete();
+
 
 #endif //PAD_SKELETON_C_FRAME_H

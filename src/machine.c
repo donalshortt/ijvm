@@ -54,6 +54,10 @@ word_t* load_constant_pool(struct block constants) {
 
 int init_ijvm(char *binary_file) {
 
+    printf("================\n");
+    printf("= Machine Init =\n");
+    printf("================\n");
+
     //initialise the instance
     instance = (struct ijvm_instance) {
         .constants = {.block_instructions = NULL, .block_size = 0},
@@ -98,6 +102,9 @@ void destroy_ijvm() {
     instance = (struct ijvm_instance) {.constants = {.block_instructions = NULL, .block_size = 0},
             .text = {.block_instructions = NULL, .block_size = 0}};
     free(current_frame);
+    while (!isEmpty(root)){
+        pop(&root);
+    }
 }
 
 void run() {
@@ -114,7 +121,7 @@ void set_output(FILE *fp) {
 }
 
 bool step() {
-    printf("-->Program counter is: %d\n", program_counter);
+    printf("-->Program counter: %d Stack size: %d\n", program_counter, stack_size());
     //printf("-->Top of stack is: %d\n", tos());
     switch (instance.text.block_instructions[program_counter]) {
         case OP_NOP:
@@ -123,6 +130,7 @@ bool step() {
         case OP_BIPUSH:
             bipush(instance.text.block_instructions[program_counter + 1]);
             program_counter = program_counter + 2;
+            printf("PUSHED %d to stack!\n", tos());
             break;
         case OP_IADD:
             iadd();
@@ -193,8 +201,12 @@ bool step() {
             program_counter += 3;
             break;
         case OP_INVOKEVIRTUAL:
-            invoke_virtual(&instance.text.block_instructions[program_counter + 1], program_counter, instance.constant_pool);
-            program_counter += 3;
+            invoke_virtual(instance.text.block_instructions, instance.constant_pool);
+            //program_counter += 3;
+            break;
+        case OP_IRETURN:
+            ireturn();
+            program_counter++;
             break;
         case OP_HALT:
             return 0;

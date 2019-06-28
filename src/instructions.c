@@ -10,6 +10,8 @@
 
 struct StackNode *root;
 
+extern int program_counter;
+
 void bipush(word_t arg) { //QUESTION: Should I use byte_t or word_t?
     push(&root, (char)arg);
     return;
@@ -125,15 +127,38 @@ void iinc(byte_t index, byte_t value) {
     current_frame->local_vars[index] += value;
 }
 
-void invoke_virtual(byte_t* array, int counter_to_store, word_t* constant_pool) {
+void invoke_virtual(byte_t* array, word_t* constant_pool) {
     printf("<!>Invoke virtual<!>\n");
-    signed short pointer = arr_to_short(array);
-    int method_start = &constant_pool[pointer];
-    printf("Signed short(pointer): %d\n", pointer);
-//    unsigned short num_of_args = arr_to_short(&array[method_start]); //segfault
-//    unsigned short local_var_size = arr_to_short(&array[method_start + 2]); //segfault
-//    printf("olalalalLocal var size: %d\n", local_var_size);
-//    new_frame(local_var_size, num_of_args,counter_to_store);
+    program_counter++;
+    unsigned short pointer = arr_to_short(&array[program_counter]);
+    int prev_pc = program_counter+2;
+    program_counter = constant_pool[pointer]; //*(constant_pool+pointer)
+    printf("Constant pool at index %d: %d\n", pointer ,constant_pool[pointer]);
+    printf("Unsigned short(pointer): %d\n", pointer);
+    unsigned short num_of_args = arr_to_short(&array[program_counter]);
+    program_counter += 2;
+    printf("Number of args: %d\n", num_of_args);
+    unsigned short local_var_size = arr_to_short(&array[program_counter]);
+    program_counter += 2;
+    printf("Local var size: %d\n", local_var_size);
+    int memory_allocated = local_var_size + num_of_args;
+    new_frame(memory_allocated, prev_pc, stack_size());
+    for (int i=num_of_args-1; i>=0; i--) {
+        frame_store(i, pop(&root));
+    }
+}
+
+void ireturn() {
+    printf("<!>IReturn<!>\n");
+    word_t returned_value = pop(&root);
+    printf("Returned value: %d\n",returned_value);
+    program_counter = current_frame->prev_program_counter;
+    printf("Reset program counter: %d\n", program_counter);
+    while(current_frame->prev_stack_size < stack_size()) {
+        pop(&root);
+    }
+    frame_delete();
+    push(&root, returned_value);
 }
 
 unsigned short arr_to_short(byte_t* bytes) {

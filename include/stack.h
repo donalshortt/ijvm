@@ -12,6 +12,8 @@ struct StackNode {
     struct StackNode* next;
 };
 
+//int gay_stack_size;
+
 struct StackNode* newNode(word_t data);
 
 int isEmpty(struct StackNode* root);
