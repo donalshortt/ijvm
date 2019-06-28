@@ -206,7 +206,6 @@ bool step() {
             break;
         case OP_IRETURN:
             ireturn();
-            program_counter++;
             break;
         case OP_HALT:
             return 0;
