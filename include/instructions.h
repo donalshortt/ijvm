@@ -46,6 +46,8 @@ void invoke_virtual(byte_t* array, word_t* constant_pool);
 
 void ireturn();
 
+void wide(byte_t* array, int* program_counter);
+
 unsigned short arr_to_short(byte_t* arg);
 
 #endif //PAD_SKELETON_C_INSTRUCTIONS_H

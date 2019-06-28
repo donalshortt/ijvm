@@ -161,6 +161,26 @@ void ireturn() {
     push(&root, returned_value);
 }
 
+void wide(byte_t* array, int* program_counter) {
+    unsigned short arg = arr_to_short(&array[1]);
+    switch(array[0]) {
+        case OP_ISTORE:
+            istore(arg);
+            *program_counter += 3;
+            break;
+        case OP_ILOAD:
+            iload(arg);
+            *program_counter += 3;
+            break;
+        case OP_IINC:
+            iinc(arg, array[3]);
+            *program_counter += 4;
+            break;
+        default:
+            printf("<!>Error in wide<!>\n");
+    }
+}
+
 unsigned short arr_to_short(byte_t* bytes) {
     unsigned short arg = bytes[1] | bytes[0] << 8;
     return arg;

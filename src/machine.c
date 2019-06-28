@@ -1,9 +1,12 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include "ijvm.h"
 #include "instructions.h"
 
 int program_counter = 0;
+
+bool is_finished = false;
 
 struct block {
     byte_t* block_instructions;
@@ -121,7 +124,7 @@ void set_output(FILE *fp) {
 }
 
 bool step() {
-    printf("-->Program counter: %d Stack size: %d\n", program_counter, stack_size());
+    //printf("-->Program counter: %d Stack size: %d\n", program_counter, stack_size());
     //printf("-->Top of stack is: %d\n", tos());
     switch (instance.text.block_instructions[program_counter]) {
         case OP_NOP:
@@ -130,7 +133,7 @@ bool step() {
         case OP_BIPUSH:
             bipush(instance.text.block_instructions[program_counter + 1]);
             program_counter = program_counter + 2;
-            printf("PUSHED %d to stack!\n", tos());
+            //printf("PUSHED %d to stack!\n", tos());
             break;
         case OP_IADD:
             iadd();
@@ -208,7 +211,11 @@ bool step() {
             ireturn();
             break;
         case OP_HALT:
-            return 0;
+            is_finished = true;
+            return false;
+        case OP_WIDE:
+            wide(&instance.text.block_instructions[program_counter + 1], &program_counter);
+            break;
         default:
             printf("<!>Instruction unknown<!>\n");
             program_counter++;
@@ -235,4 +242,12 @@ word_t get_local_variable(int i) {
 
 byte_t get_instruction() {
     return instance.text.block_instructions[program_counter];
+}
+
+bool is_finished() {
+    if (is_finished == true || (program_counter == instance.text.block_size - 1)) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
